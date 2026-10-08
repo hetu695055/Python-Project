@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Reports & Data Export - SmartHostel{% endblock %}
+{% block page_title %}Hostel Audit Reports{% endblock %}
+{% block page_subtitle %}Comprehensive performance summaries, SLA accountability tables, and dataset exports.{% endblock %}
+
+{% block content %}
+<!-- REPORT ACTION BAR -->
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main);">Quarterly Hostel Maintenance Review</h3>
+    <p style="font-size: 13px; color: var(--text-muted);">Generated automatically on {{ current_date_str }}</p>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <button type="button" class="header-btn header-btn-secondary" onclick="window.print()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+        <rect x="6" y="14" width="12" height="8"></rect>
+      </svg>
+      Print / PDF
+    </button>
+    <a href="{{ url_for('export_csv') }}" class="header-btn header-btn-primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download CSV Dataset
+    </a>
+  </div>
+</div>
+
+<!-- EXECUTIVE SUMMARY STATS -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <span class="kpi-title">Total Processed</span>
+    <span class="kpi-number">{{ kpis.total }}</span>
+    <span class="kpi-footnote">All complaint categories</span>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-title">Resolution Rate</span>
+    <span class="kpi-number" style="color: var(--success-text);">{{ kpis.resolution_rate }}%</span>
+    <span class="kpi-footnote">{{ kpis.resolved }} resolved satisfactorily</span>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-title">Mean Turnaround</span>
+    <span class="kpi-number">{{ kpis.avg_resolution_days }} <span style="font-size: 16px; font-weight: 500;">Days</span></span>
+    <span class="kpi-footnote">Target SLA: 2.0 Days</span>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-title">Pending Load</span>
+    <span class="kpi-number" style="color: var(--warning-text);">{{ kpis.pending + kpis.in_progress }}</span>
+    <span class="kpi-footnote">{{ kpis.pending }} pending, {{ kpis.in_progress }} in progress</span>
+  </div>
+</div>
+
+<!-- CATEGORY PERFORMANCE BREAKDOWN TABLE -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h3>Category Performance & SLA Metrics</h3>
+      <p class="card-subtitle">Volume, resolution counts, and mean duration across departments</p>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Total Reported</th>
+          <th>Resolved</th>
+          <th>Pending</th>
+          <th>Resolution Rate</th>
+          <th>Mean Days to Resolve</th>
+          <th>Department SLA Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in cat_breakdown %}
+        <tr>
+          <td><b>{{ cat.category }}</b></td>
+          <td>{{ cat.total }}</td>
+          <td><span style="color: var(--success-text); font-weight: 600;">{{ cat.resolved }}</span></td>
+          <td><span style="color: var(--warning-text); font-weight: 600;">{{ cat.pending }}</span></td>
+          <td>
+            {% set pct = ((cat.resolved / cat.total) * 100)|round(1) if cat.total > 0 else 0 %}
+            <b>{{ pct }}%</b>
+          </td>
+          <td>{{ cat.avg_days }} days</td>
+          <td>
+            {% if cat.avg_days <= 2.0 %}
+              <span class="badge badge-resolved"><span class="badge-dot"></span>Within SLA</span>
+            {% elif cat.avg_days <= 2.8 %}
+              <span class="badge badge-pending"><span class="badge-dot"></span>Borderline</span>
+            {% else %}
+              <span class="badge badge-rejected"><span class="badge-dot"></span>SLA Breach</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BLOCK SUMMARY BREAKDOWN TABLE -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h3>Hostel Block Grievance Breakdown</h3>
+      <p class="card-subtitle">Distribution of complaints, resolved tallies, and critical flags across residential blocks</p>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Hostel Block</th>
+          <th>Total Complaints</th>
+          <th>Resolved</th>
+          <th>Pending</th>
+          <th>Critical Flags</th>
+          <th>Complaint Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for blk in block_breakdown %}
+        <tr>
+          <td><b>{{ blk.block }}</b></td>
+          <td><b>{{ blk.total }}</b></td>
+          <td><span style="color: var(--success-text); font-weight: 600;">{{ blk.resolved }}</span></td>
+          <td><span style="color: var(--warning-text); font-weight: 600;">{{ blk.pending }}</span></td>
+          <td>
+            {% if blk.critical > 0 %}
+              <span class="priority-tag priority-critical">{{ blk.critical }}</span>
+            {% else %}
+              <span style="color: var(--text-muted); font-size: 12px;">0</span>
+            {% endif %}
+          </td>
+          <td>{{ ((blk.total / kpis.total) * 100)|round(1) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

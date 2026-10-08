@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Management - SmartHostel{% endblock %}
+{% block page_title %}Complaints Directory{% endblock %}
+{% block page_subtitle %}Filter, review, assign technicians, and track the full resolution lifecycle.{% endblock %}
+
+{% block content %}
+<!-- FILTER & SEARCH BAR -->
+<form method="GET" action="{{ url_for('complaints') }}" class="filter-bar">
+  <div class="search-input-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input type="text" name="search" class="form-control" placeholder="Search by ID, Room, Student, or Keyword..." value="{{ filters.search }}">
+  </div>
+
+  <div class="filter-group">
+    <!-- Category Filter -->
+    <select name="category" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="All">All Categories</option>
+      {% for cat in categories_list %}
+        <option value="{{ cat }}" {% if filters.category == cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Block Filter -->
+    <select name="block" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="All">All Blocks</option>
+      {% for b in blocks_list %}
+        <option value="{{ b }}" {% if filters.block == b %}selected{% endif %}>{{ b }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Severity Filter -->
+    <select name="severity" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="All">All Severities</option>
+      {% for sev in severities_list %}
+        <option value="{{ sev }}" {% if filters.severity == sev %}selected{% endif %}>{{ sev }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Status Filter -->
+    <select name="status" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="All">All Statuses</option>
+      {% for st in statuses_list %}
+        <option value="{{ st }}" {% if filters.status == st %}selected{% endif %}>{{ st }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Sort By -->
+    <select name="sort_by" class="form-control" style="width: auto;" onchange="this.form.submit()">
+      <option value="date_desc" {% if filters.sort_by == 'date_desc' %}selected{% endif %}>Newest First</option>
+      <option value="date_asc" {% if filters.sort_by == 'date_asc' %}selected{% endif %}>Oldest First</option>
+      <option value="priority" {% if filters.sort_by == 'priority' %}selected{% endif %}>Highest Priority First</option>
+      <option value="status" {% if filters.sort_by == 'status' %}selected{% endif %}>Status Grouping</option>
+    </select>
+
+    <button type="submit" class="header-btn header-btn-primary" style="padding: 8px 14px;">Apply</button>
+    <a href="{{ url_for('complaints') }}" class="header-btn header-btn-secondary" style="padding: 8px 14px;" title="Reset Filters">Reset</a>
+  </div>
+</form>
+
+<!-- COMPLAINTS TABLE CARD -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h3>Active Complaints Registry ({{ total_count }} Results)</h3>
+      <p class="card-subtitle">Complete list of registered student complaints with operational triage controls</p>
+    </div>
+    <div class="card-actions">
+      <a href="{{ url_for('export_csv') }}" class="header-btn header-btn-secondary" style="font-size: 12.5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export CSV
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Complaint ID</th>
+          <th>Student Details</th>
+          <th>Location</th>
+          <th>Category</th>
+          <th>Problem Description</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if complaints %}
+          {% for c in complaints %}
+          <tr>
+            <td>
+              <b style="color: var(--primary); font-size: 13.5px;">#{{ c.complaint_code }}</b>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: var(--text-main);">{{ c.student_name }}</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);">{{ c.student_id }}</div>
+            </td>
+            <td>
+              <span style="font-weight: 600;">{{ c.room_number }}</span>
+              <div style="font-size: 11px; color: var(--text-muted);">{{ c.block }}</div>
+            </td>
+            <td>
+              <span style="font-weight: 500;">{{ c.category }}</span>
+            </td>
+            <td style="max-width: 250px;">
+              <div style="font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ c.title }}">
+                {{ c.title }}
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ c.description }}">
+                {{ c.description }}
+              </div>
+            </td>
+            <td>
+              <span class="priority-tag priority-{{ c.severity|lower }}">{{ c.severity }}</span>
+            </td>
+            <td>
+              {% if c.status == 'Resolved' %}
+                <span class="badge badge-resolved"><span class="badge-dot"></span>Resolved</span>
+              {% elif c.status == 'Pending' %}
+                <span class="badge badge-pending"><span class="badge-dot"></span>Pending</span>
+              {% elif c.status == 'In Progress' %}
+                <span class="badge badge-in-progress"><span class="badge-dot"></span>In Progress</span>
+              {% else %}
+                <span class="badge badge-rejected"><span class="badge-dot"></span>Rejected</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">
+              {{ c.created_at[:10] }}
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <button type="button" class="action-btn" onclick="viewComplaintDetails('{{ c.complaint_code }}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                View
+              </button>
+              <button type="button" class="action-btn" style="color: var(--primary);" onclick="openStatusModal('{{ c.complaint_code }}', '{{ c.status }}', `{{ c.resolution_notes|default('', true)|replace('`', '') }}`, `{{ c.assigned_to|default('', true) }}`)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Update Status
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+              <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+              <div style="font-size: 16px; font-weight: 600; color: var(--text-main);">No matching complaints found</div>
+              <p style="font-size: 13px;">Try clearing your filters or search keywords.</p>
+              <a href="{{ url_for('complaints') }}" class="header-btn header-btn-secondary" style="margin-top: 14px; display: inline-flex;">Clear All Filters</a>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

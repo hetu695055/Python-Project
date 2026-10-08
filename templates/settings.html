@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings & Data Control - SmartHostel{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+{% block page_subtitle %}Configure portal preferences, view database health, and manage demo datasets.{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px;">
+  <!-- HOSTEL PROFILE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Hostel Institution Profile</h3>
+        <p class="card-subtitle">General institution details displayed on public reports and student receipts</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Hostel Name</label>
+          <input type="text" class="form-control" value="Grand Central University Hostel" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Campus Location</label>
+          <input type="text" class="form-control" value="North Campus, Sector 4" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Chief Warden In-Charge</label>
+          <input type="text" class="form-control" value="Dr. S. K. Verma (Chief Warden)" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emergency Control Room</label>
+          <input type="text" class="form-control" value="+91 98765-43210 (24x7 Helpline)" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATABASE & DEMO DATA MANAGEMENT -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Database & Demo Data Controller</h3>
+        <p class="card-subtitle">Self-contained SQLite storage with instant realistic dataset regeneration</p>
+      </div>
+      <span class="badge badge-resolved"><span class="badge-dot"></span>SQLite Connected</span>
+    </div>
+    <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Storage Engine</span>
+          <span class="detail-value">SQLite 3 (hostel_complaints.db)</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Active Records</span>
+          <span class="detail-value">{{ kpis.total }} Complaints</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">External Dependencies</span>
+          <span class="detail-value">Zero (No Kaggle or external APIs required)</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Analytics Processing</span>
+          <span class="detail-value">Pandas 3.0 & NumPy 2.4</span>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-subtle); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+        <div>
+          <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">Regenerate Demo Dataset</h4>
+          <p style="font-size: 12.5px; color: var(--text-muted);">Reset the database and repopulate 248 realistic complaints matching target distributions.</p>
+        </div>
+        <form method="POST" action="{{ url_for('reseed_database') }}" onsubmit="return confirm('Are you sure you want to reset and reseed the complaints database?')">
+          <button type="submit" class="header-btn header-btn-primary" style="background-color: var(--warning); border-color: var(--warning);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+            Reseed 248 Demo Complaints
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICE LEVEL AGREEMENT (SLA) THRESHOLDS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>SLA Target Benchmarks</h3>
+        <p class="card-subtitle">Hostel administration standard turnaround timelines</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Critical Issues Target</label>
+          <input type="text" class="form-control" value="Under 6 Hours" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">High Priority Target</label>
+          <input type="text" class="form-control" value="Under 24 Hours" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Medium Priority Target</label>
+          <input type="text" class="form-control" value="Under 48 Hours" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Low Priority Target</label>
+          <input type="text" class="form-control" value="Under 72 Hours" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

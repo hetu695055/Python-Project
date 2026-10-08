@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Overview - SmartHostel{% endblock %}
+{% block page_title %}Hostel Overview{% endblock %}
+{% block page_subtitle %}Monitor complaints, identify recurring issues, and improve hostel services.{% endblock %}
+
+{% block content %}
+<!-- 1. TOP KPI CARDS -->
+<div class="kpi-grid">
+  <!-- Total Complaints -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-title">Total Complaints</span>
+      <div class="kpi-icon-box icon-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      </div>
+    </div>
+    <div class="kpi-value-row">
+      <span class="kpi-number">{{ kpis.total }}</span>
+      <span class="kpi-badge kpi-badge-positive">↑ +12.5% this month</span>
+    </div>
+    <div class="kpi-footnote">
+      <span>Logged across all 5 hostel blocks</span>
+    </div>
+  </div>
+
+  <!-- Pending Complaints -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-title">Pending Complaints</span>
+      <div class="kpi-icon-box icon-orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+    </div>
+    <div class="kpi-value-row">
+      <span class="kpi-number">{{ kpis.pending }}</span>
+      <span class="kpi-badge kpi-badge-neutral">{{ ((kpis.pending / kpis.total) * 100)|round(1) }}% of total</span>
+    </div>
+    <div class="kpi-footnote">
+      <span>Awaiting technician allocation</span>
+    </div>
+  </div>
+
+  <!-- Resolved Complaints -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-title">Resolved Complaints</span>
+      <div class="kpi-icon-box icon-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+    </div>
+    <div class="kpi-value-row">
+      <span class="kpi-number">{{ kpis.resolved }}</span>
+      <span class="kpi-badge kpi-badge-positive">{{ kpis.resolution_rate }}% success rate</span>
+    </div>
+    <div class="kpi-footnote">
+      <span>Average {{ kpis.avg_resolution_days }} days turnaround</span>
+    </div>
+  </div>
+
+  <!-- Critical Issues -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-title">Critical Issues</span>
+      <div class="kpi-icon-box icon-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+    </div>
+    <div class="kpi-value-row">
+      <span class="kpi-number">{{ kpis.critical }}</span>
+      <span class="kpi-badge kpi-badge-danger">⚠ Immediate triage</span>
+    </div>
+    <div class="kpi-footnote">
+      <span style="color: var(--danger-text); font-weight: 500;">{{ kpis.critical_pending }} currently active / open</span>
+    </div>
+  </div>
+</div>
+
+<!-- 2. COMPLAINT TRENDS (Large Interactive Area/Line Chart) -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h2>Complaint Trends</h2>
+      <p class="card-subtitle">Volume of complaints submitted over time with 7-day moving trendline</p>
+    </div>
+    <div class="card-actions">
+      <div class="time-btn-group">
+        <button type="button" class="time-btn" data-trend-days="7">7 Days</button>
+        <button type="button" class="time-btn active" data-trend-days="30">30 Days</button>
+        <button type="button" class="time-btn" data-trend-days="90">3 Months</button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div id="trendChart" class="chart-container-lg"></div>
+  </div>
+</div>
+
+<!-- 3. MIDDLE ROW: Category Breakdown & Status Donut -->
+<div class="dashboard-grid-2">
+  <!-- Problems by Category (Horizontal Bar Chart) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Problems by Category</h3>
+        <p class="card-subtitle">Categorical distribution sorted from highest to lowest volume</p>
+      </div>
+      <a href="{{ url_for('complaints') }}" class="header-btn header-btn-secondary" style="padding: 4px 10px; font-size: 12px;">View All</a>
+    </div>
+    <div class="card-body">
+      <div id="categoryChart" class="chart-container"></div>
+    </div>
+  </div>
+
+  <!-- Complaint Status (Donut Chart) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Complaint Status</h3>
+        <p class="card-subtitle">Current resolution pipeline breakdown with percentage shares</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="statusChart" class="chart-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. THIRD ROW: Hostel Block Analysis, Severity Analysis, Resolution Time -->
+<div class="dashboard-grid-3">
+  <!-- Hostel Block Analysis (Vertical Bar Chart) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Complaints by Hostel Block</h3>
+        <p class="card-subtitle">Block-wise grievance load comparison</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="blockChart" class="chart-container"></div>
+      <div class="insight-callout insight-callout-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span><b>Data Insight:</b> {{ block_insight }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Severity Analysis -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Severity Analysis</h3>
+        <p class="card-subtitle">Grievance urgency stratification</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="severityChart" class="chart-container"></div>
+      <div class="insight-callout insight-callout-danger">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <div>
+          <b>Critical Issues: {{ kpis.critical }}</b><br>
+          <span style="font-size: 11.5px;">Immediate attention required for critical complaints.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolution Time Analysis -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Average Resolution Time</h3>
+        <p class="card-subtitle">Mean days to turnaround by category</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="resolutionChart" class="chart-container"></div>
+      <div class="insight-callout insight-callout-warning">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span><b>Efficiency Insight:</b> {{ resolution_insight }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. RECENT COMPLAINTS TABLE -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h3>Recent Complaints</h3>
+      <p class="card-subtitle">Latest hostel grievances logged across rooms</p>
+    </div>
+    <a href="{{ url_for('complaints') }}" class="header-btn header-btn-primary" style="padding: 6px 14px; font-size: 12.5px;">
+      Manage All Complaints →
+    </a>
+  </div>
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Complaint ID</th>
+          <th>Room</th>
+          <th>Category</th>
+          <th>Problem</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in recent_complaints %}
+        <tr>
+          <td><b style="color: var(--primary);">#{{ c.complaint_code }}</b></td>
+          <td><b>{{ c.room_number }}</b> <span style="font-size: 11px; color: var(--text-muted);">({{ c.block }})</span></td>
+          <td>{{ c.category }}</td>
+          <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ c.title }}">
+            {{ c.title }}
+          </td>
+          <td>
+            <span class="priority-tag priority-{{ c.severity|lower }}">{{ c.severity }}</span>
+          </td>
+          <td>
+            {% if c.status == 'Resolved' %}
+              <span class="badge badge-resolved"><span class="badge-dot"></span>Resolved</span>
+            {% elif c.status == 'Pending' %}
+              <span class="badge badge-pending"><span class="badge-dot"></span>Pending</span>
+            {% elif c.status == 'In Progress' %}
+              <span class="badge badge-in-progress"><span class="badge-dot"></span>In Progress</span>
+            {% else %}
+              <span class="badge badge-rejected"><span class="badge-dot"></span>Rejected</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 12px; color: var(--text-muted);">
+            {{ c.created_at[:10] }}
+          </td>
+          <td>
+            <button type="button" class="action-btn" onclick="viewComplaintDetails('{{ c.complaint_code }}')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              View
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderPlotlyChart("trendChart", {{ trend_chart_json|safe }});
+    renderPlotlyChart("categoryChart", {{ category_chart_json|safe }});
+    renderPlotlyChart("statusChart", {{ status_donut_json|safe }});
+    renderPlotlyChart("blockChart", {{ block_chart_json|safe }});
+    renderPlotlyChart("severityChart", {{ severity_chart_json|safe }});
+    renderPlotlyChart("resolutionChart", {{ resolution_chart_json|safe }});
+  });
+</script>
+{% endblock %}

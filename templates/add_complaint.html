@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Submit New Complaint - SmartHostel{% endblock %}
+{% block page_title %}Submit New Complaint{% endblock %}
+{% block page_subtitle %}Log an issue for prompt inspection by hostel facility managers and technicians.{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto; width: 100%;">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Hostel Grievance Registration Form</h3>
+        <p class="card-subtitle">Fill in student and room details accurately to expedite maintenance service</p>
+      </div>
+      <span class="badge badge-in-progress">
+        <span class="badge-dot"></span>Instant Ticketing
+      </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('add_complaint') }}" class="card-body" style="display: flex; flex-direction: column; gap: 24px;">
+      <!-- Section 1: Student Information -->
+      <div>
+        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+          1. Student Identification
+        </h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="student_name">Student Full Name <span class="required">*</span></label>
+            <input type="text" id="student_name" name="student_name" class="form-control" placeholder="e.g. Rohan Sharma" required value="{{ form.student_name if form else '' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student_id">Student College ID / Roll Number <span class="required">*</span></label>
+            <input type="text" id="student_id" name="student_id" class="form-control" placeholder="e.g. CS2024-042" required value="{{ form.student_id if form else '' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student_phone">Contact Phone Number</label>
+            <input type="tel" id="student_phone" name="student_phone" class="form-control" placeholder="e.g. +91 98765-43210" value="{{ form.student_phone if form else '' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student_email">Student Email Address</label>
+            <input type="email" id="student_email" name="student_email" class="form-control" placeholder="e.g. rohan.sharma@hostel.edu" value="{{ form.student_email if form else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--border-subtle);">
+
+      <!-- Section 2: Room & Hostel Block -->
+      <div>
+        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+          2. Hostel Location
+        </h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="block">Hostel Block <span class="required">*</span></label>
+            <select id="block" name="block" class="form-control" required>
+              {% for b in blocks_list %}
+                <option value="{{ b }}" {% if form and form.block == b %}selected{% elif b == 'Block B' %}selected{% endif %}>{{ b }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="room_number">Room Number <span class="required">*</span></label>
+            <input type="text" id="room_number" name="room_number" class="form-control" placeholder="e.g. B-204 or A-102" required value="{{ form.room_number if form else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--border-subtle);">
+
+      <!-- Section 3: Problem Classification -->
+      <div>
+        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+          3. Complaint Particulars
+        </h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="category">Complaint Category <span class="required">*</span></label>
+            <select id="category" name="category" class="form-control" required>
+              {% for cat in categories_list %}
+                <option value="{{ cat }}" {% if form and form.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="severity">Severity / Urgency Level <span class="required">*</span></label>
+            <select id="severity" name="severity" class="form-control" required>
+              <option value="Low" {% if form and form.severity == 'Low' %}selected{% endif %}>Low (Minor cosmetic / non-urgent)</option>
+              <option value="Medium" {% if form and form.severity == 'Medium' %}selected{% elif not form %}selected{% endif %}>Medium (Normal service interruption)</option>
+              <option value="High" {% if form and form.severity == 'High' %}selected{% endif %}>High (Significant disruption / study affected)</option>
+              <option value="Critical" {% if form and form.severity == 'Critical' %}selected{% endif %}>Critical (Immediate hazard / power cut / flooding)</option>
+            </select>
+          </div>
+
+          <div class="form-group form-group-full">
+            <label class="form-label" for="title">Issue Summary Title</label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="Brief 1-line summary e.g. Wi-Fi router rebooting constantly on floor 2" value="{{ form.title if form else '' }}">
+          </div>
+
+          <div class="form-group form-group-full">
+            <label class="form-label" for="description">Detailed Problem Description <span class="required">*</span></label>
+            <textarea id="description" name="description" class="form-control" rows="4" placeholder="Provide complete symptoms, when it started, and specific location inside room/corridor..." required>{{ form.description if form else '' }}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="date">Incident Date</label>
+            <input type="date" id="date" name="date" class="form-control" value="{{ today_date }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px;">
+        <a href="{{ url_for('dashboard') }}" class="header-btn header-btn-secondary">Cancel</a>
+        <button type="submit" class="header-btn header-btn-primary" style="padding: 10px 24px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Submit Complaint
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

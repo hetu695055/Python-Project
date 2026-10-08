@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Hostel Blocks Analysis - SmartHostel{% endblock %}
+{% block page_title %}Hostel Blocks Analysis{% endblock %}
+{% block page_subtitle %}Comparative infrastructure performance, block health indexes, and warden supervision.{% endblock %}
+
+{% block content %}
+<!-- HIGHLIGHT BANNER FOR PROBLEMATIC BLOCK -->
+<div class="insight-callout insight-callout-info" style="font-size: 14px; padding: 16px 20px;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="16" x2="12" y2="12"></line>
+    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+  </svg>
+  <div>
+    <b style="font-size: 15px;">Automated Block Health Finding:</b><br>
+    {{ block_insight }} Special focus recommended on wireless networking and plumbing infrastructure in Block B wings.
+  </div>
+</div>
+
+<!-- 5 BLOCK HEALTH SCORECARDS -->
+<div class="block-cards-grid">
+  {% for b in blocks %}
+  <div class="block-card">
+    <div class="block-card-header">
+      <div class="block-name">{{ b.block }}</div>
+      <span class="block-health-badge {% if b.health_score >= 80 %}health-high{% elif b.health_score >= 65 %}health-med{% else %}health-low{% endif %}">
+        Health: {{ b.health_score }}/100
+      </span>
+    </div>
+
+    <div>
+      <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Warden In-Charge</div>
+      <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);">{{ b.warden }}</div>
+      <div style="font-size: 11.5px; color: var(--text-muted);">{{ b.contact }}</div>
+    </div>
+
+    <div style="margin-top: 4px;">
+      <div class="block-stat-row">
+        <span class="block-stat-label">Total Logged</span>
+        <span class="block-stat-value">{{ b.complaint_count }} ({{ b.share_pct }}%)</span>
+      </div>
+      <div class="block-stat-row">
+        <span class="block-stat-label">Pending Triage</span>
+        <span class="block-stat-value" style="color: var(--warning-text);">{{ b.pending_count }}</span>
+      </div>
+      <div class="block-stat-row">
+        <span class="block-stat-label">Resolved</span>
+        <span class="block-stat-value" style="color: var(--success-text);">{{ b.resolved_count }}</span>
+      </div>
+      <div class="block-stat-row">
+        <span class="block-stat-label">Open Critical</span>
+        <span class="block-stat-value" style="color: var(--danger-text);">{{ b.critical_count }}</span>
+      </div>
+      <div class="block-stat-row">
+        <span class="block-stat-label">Top Category</span>
+        <span class="block-stat-value">{{ b.top_issue }}</span>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 10px;">
+      <a href="{{ url_for('complaints', block=b.block) }}" class="action-btn" style="width: 100%; justify-content: center;">
+        View {{ b.block }} Issues →
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- BLOCK COMPARISON CHART -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h3>Hostel Block Grievance Volume Comparison</h3>
+      <p class="card-subtitle">Direct comparison against the hostel average benchmark line</p>
+    </div>
+  </div>
+  <div class="card-body">
+    <div id="blockChartLarge" class="chart-container-lg"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderPlotlyChart("blockChartLarge", {{ block_chart_json|safe }});
+  });
+</script>
+{% endblock %}

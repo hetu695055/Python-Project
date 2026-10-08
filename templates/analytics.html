@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Advanced Analytics & Insights - SmartHostel{% endblock %}
+{% block page_title %}Advanced Analytics & Decision Hub{% endblock %}
+{% block page_subtitle %}In-depth correlation matrices, recurrent complaint detection, and data-driven recommendations.{% endblock %}
+
+{% block content %}
+<!-- SMART RECOMMENDATIONS SECTION -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title-group">
+      <h3>Data-Driven Administrative Recommendations</h3>
+      <p class="card-subtitle">Automated facility management insights calculated from active complaint patterns</p>
+    </div>
+    <span class="badge badge-resolved">
+      <span class="badge-dot"></span>Live AI/Analytics Engine
+    </span>
+  </div>
+  <div class="card-body">
+    <div class="recs-grid">
+      {% for rec in recommendations %}
+      <div class="rec-card">
+        <div class="rec-icon-wrapper {% if 'Urgent' in rec.type %}icon-red{% elif 'Service' in rec.type %}icon-orange{% elif 'Workflow' in rec.type %}icon-blue{% else %}icon-green{% endif %}">
+          {% if 'wifi' in rec.icon %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
+          {% elif 'shield' in rec.icon %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          {% elif 'clock' in rec.icon %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          {% endif %}
+        </div>
+        <div class="rec-content">
+          <div class="rec-meta">
+            <span class="badge {% if 'Urgent' in rec.type %}badge-rejected{% elif 'Service' in rec.type %}badge-pending{% elif 'Workflow' in rec.type %}badge-in-progress{% else %}badge-resolved{% endif %}">
+              {{ rec.type }}
+            </span>
+            <span style="font-size: 11.5px; font-weight: 600; color: var(--text-muted);">{{ rec.impact }}</span>
+          </div>
+          <div class="rec-title">{{ rec.title }}</div>
+          <p class="rec-desc">{{ rec.description }}</p>
+          <span class="rec-dept">Assigned Dept: <b>{{ rec.dept }}</b></span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- CROSS-TABULATION MATRIX & SEVERITY RESOLUTION SPEED -->
+<div class="dashboard-grid-2">
+  <!-- Block vs Category Cross Tabulation Heatmap -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Block vs Category Grievance Heatmap</h3>
+        <p class="card-subtitle">Density distribution of complaints across blocks and facilities</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="heatmapChart" class="chart-container-lg"></div>
+    </div>
+  </div>
+
+  <!-- Severity vs Average Resolution Days -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Turnaround Speed by Severity Tier</h3>
+        <p class="card-subtitle">Evaluation of SLA adherence across urgency tiers</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="sevResChart" class="chart-container-lg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECURRENCE HOTSPOTS & RESOLUTION PIPELINE -->
+<div class="dashboard-grid-2">
+  <!-- Recurring Complaint Hotspots -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Recurrent Complaint Hotspots</h3>
+        <p class="card-subtitle">Rooms with the highest frequency of repeat grievance logs</p>
+      </div>
+      <span class="badge badge-pending">Watchlist</span>
+    </div>
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Hostel Block</th>
+            <th>Room Number</th>
+            <th>Total Grievances</th>
+            <th>Action Suggested</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for spot in hotspots %}
+          <tr>
+            <td><b>{{ spot.block }}</b></td>
+            <td><b style="color: var(--primary);">{{ spot.room_number }}</b></td>
+            <td>
+              <span class="badge badge-rejected" style="font-size: 13px;">{{ spot.count }} logs</span>
+            </td>
+            <td>
+              <a href="{{ url_for('complaints', search=spot.room_number) }}" class="action-btn" style="font-size: 11.5px;">
+                Inspect Room History
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Category & Speed Breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3>Average Resolution Turnaround</h3>
+        <p class="card-subtitle">Average duration in days from complaint submission to resolution</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="resChart" class="chart-container"></div>
+      <div class="insight-callout insight-callout-warning">
+        <span><b>Bottleneck Alert:</b> {{ res_insight }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderPlotlyChart("heatmapChart", {{ heatmap_json|safe }});
+    renderPlotlyChart("sevResChart", {{ sev_res_json|safe }});
+    renderPlotlyChart("resChart", {{ res_chart_json|safe }});
+  });
+</script>
+{% endblock %}
